@@ -27,13 +27,14 @@ public class BoardUi extends Application{
     private static final int Height = 10;
     private static final double TOKEN_RADIUS = Tile * 0.22;
 
-    private Circle[] players;    
-    private int[] positions;           
+    private Circle[] players;
+    private int[] positions;
     private int currentPlayerIndex = 0;
     private Label turnLabel;
 
     private Map<Integer, Integer> harekat;
 
+    private boolean[] isComputerPlayer = new boolean[]{false, true};
 
     @Override
     public void start(Stage stage) {
@@ -117,6 +118,7 @@ public class BoardUi extends Application{
             Circle currentToken = players[currentPlayerIndex];
 
             int oldPos = positions[currentPlayerIndex];
+            //positions[currentPlayerIndex] += diceValue;
             int intermediatePos = oldPos + diceValue;
             if (intermediatePos > 100) intermediatePos = 100;
             positions[currentPlayerIndex] = intermediatePos;
@@ -181,6 +183,7 @@ public class BoardUi extends Application{
                         new KeyValue(token.centerYProperty(), ty)
                 )
         );
+
         timeline.setOnFinished(e -> {
             if (onFinished != null) onFinished.run();
         });
@@ -193,8 +196,10 @@ public class BoardUi extends Application{
         int row = rc[0];
         int col = rc[1];
 
+
         double x = col * Tile;
         double y = (Height - 1 - row) * Tile;
+
 
         double cx = switch (corner) {
             case BALA_CHAP -> x + TOKEN_RADIUS;
@@ -236,7 +241,19 @@ public class BoardUi extends Application{
         currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
         String playerName = (currentPlayerIndex == 0) ? "قرمز" : "آبی";
         turnLabel.setText("نوبت بازیکن " + playerName + " است");
+
+        if (isComputerPlayer[currentPlayerIndex]) {
+            dice.setDisable(true);
+            javafx.animation.PauseTransition pause = new javafx.animation.PauseTransition(Duration.seconds(1.2));
+            pause.setOnFinished(e -> {
+                dice.roll();
+            });
+            pause.play();
+        } else {
+            dice.setDisable(false);
+        }
     }
+
 
     private void drawSnake(Pane layer, int from, int to) {
         double[] start = cellCenter(from, Corner.BALA_CHAP);
@@ -259,6 +276,7 @@ public class BoardUi extends Application{
 
         layer.getChildren().add(snake);
     }
+
 
     private void drawLadder(Pane layer, int from, int to) {
         double[] start = cellCenter(from, Corner.PAYIN_RAST);
