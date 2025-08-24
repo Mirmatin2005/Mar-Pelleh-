@@ -118,7 +118,6 @@ public class BoardUi extends Application{
             Circle currentToken = players[currentPlayerIndex];
 
             int oldPos = positions[currentPlayerIndex];
-            //positions[currentPlayerIndex] += diceValue;
             int intermediatePos = oldPos + diceValue;
             if (intermediatePos > 100) intermediatePos = 100;
             positions[currentPlayerIndex] = intermediatePos;
