@@ -13,6 +13,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.scene.shape.*;
 import java.util.HashMap;
 import java.util.Map;
 import javafx.animation.Timeline;
@@ -26,9 +27,9 @@ public class BoardUi extends Application{
     private static final int Height = 10;
     private static final double TOKEN_RADIUS = Tile * 0.22;
 
-    private Circle[] players;          // لیست مهره‌ها
-    private int[] positions;           // موقعیت هر بازیکن
-    private int currentPlayerIndex = 0; // نوبت فعلی
+    private Circle[] players;    
+    private int[] positions;           
+    private int currentPlayerIndex = 0;
     private Label turnLabel;
 
     private Map<Integer, Integer> harekat;
@@ -38,22 +39,17 @@ public class BoardUi extends Application{
     public void start(Stage stage) {
         harekat = new HashMap<>();
 
-        //Mar ha:
         harekat.put(22, 7);
         harekat.put(34, 11);
         harekat.put(98, 26);
-        harekat.put(78, 67);
-        harekat.put(48, 41);
-        harekat.put(55, 29);
+        harekat.put(78, 41);
+        harekat.put(86, 48);
 
-        //Pelle ha:
         harekat.put(3, 80);
-        harekat.put(20, 37);
-        harekat.put(16, 61);
-        harekat.put(81, 96);
-        harekat.put(39, 57);
-        harekat.put(5, 19);
-        harekat.put(44, 66);
+        harekat.put(6, 32);
+        harekat.put(38, 96);
+        harekat.put(45, 66);
+        harekat.put(50, 89);
 
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_LEFT);
@@ -83,6 +79,7 @@ public class BoardUi extends Application{
             }
         }
         Pane tokenLayer = new Pane();
+        Pane snakeLadderLayer = new Pane();
 
         tokenLayer.setPickOnBounds(false);
         tokenLayer.setPrefSize(Width * Tile, Height * Tile);
@@ -99,6 +96,19 @@ public class BoardUi extends Application{
         PlaceTokenAtCell(player1, 1, Corner.BALA_CHAP);
         PlaceTokenAtCell(player2, 1, Corner.BALA_RAST);
 
+
+        drawSnake(snakeLadderLayer, 22, 7);
+        drawSnake(snakeLadderLayer, 34, 11);
+        drawSnake(snakeLadderLayer, 98, 26);
+        drawSnake(snakeLadderLayer, 78, 41);
+        drawSnake(snakeLadderLayer, 86, 48);
+
+        drawLadder(snakeLadderLayer, 3, 80);
+        drawLadder(snakeLadderLayer, 6, 32);
+        drawLadder(snakeLadderLayer, 38, 96);
+        drawLadder(snakeLadderLayer, 45, 66);
+        drawLadder(snakeLadderLayer, 50, 89);
+
         turnLabel = new Label("نوبت بازیکن قرمز است");
         turnLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
@@ -107,7 +117,6 @@ public class BoardUi extends Application{
             Circle currentToken = players[currentPlayerIndex];
 
             int oldPos = positions[currentPlayerIndex];
-            //positions[currentPlayerIndex] += diceValue;
             int intermediatePos = oldPos + diceValue;
             if (intermediatePos > 100) intermediatePos = 100;
             positions[currentPlayerIndex] = intermediatePos;
@@ -131,7 +140,7 @@ public class BoardUi extends Application{
             });
         });
 
-        Pane board = new Pane(grid, tokenLayer);
+        Pane board = new Pane(grid, snakeLadderLayer, tokenLayer);
         BorderPane root = new BorderPane();
         root.setTop(turnLabel);
         BorderPane.setAlignment(turnLabel, Pos.CENTER);
@@ -172,7 +181,6 @@ public class BoardUi extends Application{
                         new KeyValue(token.centerYProperty(), ty)
                 )
         );
-
         timeline.setOnFinished(e -> {
             if (onFinished != null) onFinished.run();
         });
@@ -185,10 +193,8 @@ public class BoardUi extends Application{
         int row = rc[0];
         int col = rc[1];
 
-
         double x = col * Tile;
         double y = (Height - 1 - row) * Tile;
-
 
         double cx = switch (corner) {
             case BALA_CHAP -> x + TOKEN_RADIUS;
@@ -232,8 +238,55 @@ public class BoardUi extends Application{
         turnLabel.setText("نوبت بازیکن " + playerName + " است");
     }
 
+    private void drawSnake(Pane layer, int from, int to) {
+        double[] start = cellCenter(from, Corner.BALA_CHAP);
+        double[] end = cellCenter(to, Corner.PAYIN_CHAP);
 
-    public static void main(String[] args){
-        launch(args);
+        double ctrlX1 = (start[0] + end[0]) / 2 + 40;
+        double ctrlY1 = start[1];
+        double ctrlX2 = (start[0] + end[0]) / 2 - 40;
+        double ctrlY2 = end[1];
+
+        javafx.scene.shape.CubicCurve snake = new javafx.scene.shape.CubicCurve(
+                start[0], start[1],
+                ctrlX1, ctrlY1,
+                ctrlX2, ctrlY2,
+                end[0], end[1]
+        );
+        snake.setStroke(Color.DARKGREEN);
+        snake.setStrokeWidth(6);
+        snake.setFill(null);
+
+        layer.getChildren().add(snake);
     }
+
+    private void drawLadder(Pane layer, int from, int to) {
+        double[] start = cellCenter(from, Corner.PAYIN_RAST);
+        double[] end = cellCenter(to, Corner.BALA_RAST);
+
+        javafx.scene.shape.Line side1 = new javafx.scene.shape.Line(start[0], start[1], end[0], end[1]);
+        javafx.scene.shape.Line side2 = new javafx.scene.shape.Line(start[0]-15, start[1], end[0]-15, end[1]);
+
+        side1.setStroke(Color.SADDLEBROWN);
+        side1.setStrokeWidth(4);
+        side2.setStroke(Color.SADDLEBROWN);
+        side2.setStrokeWidth(4);
+
+        for (int i=0; i<=5; i++) {
+            double t = i / 5.0;
+            double x1 = start[0] + (end[0] - start[0]) * t;
+            double y1 = start[1] + (end[1] - start[1]) * t;
+
+            double x2 = start[0]-15 + (end[0]-15 - (start[0]-15)) * t;
+            double y2 = start[1] + (end[1] - start[1]) * t;
+
+            javafx.scene.shape.Line step = new javafx.scene.shape.Line(x1, y1, x2, y2);
+            step.setStroke(Color.SIENNA);
+            step.setStrokeWidth(3);
+            layer.getChildren().add(step);
+        }
+
+        layer.getChildren().addAll(side1, side2);
+    }
+
 }
