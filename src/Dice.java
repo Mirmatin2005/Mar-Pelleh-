@@ -25,7 +25,7 @@ public class Dice {
         uiBox.setStyle("-fx-alignment: center;");
     }
 
-    private void roll() {
+    void roll() {
         int dice = random.nextInt(6) + 1;
         resultLabel.setText("You rolled: " + dice);
 
